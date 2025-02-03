@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('company');
             $table->unsignedBigInteger('category_id');
             $table->float('price');
+            $table->json('images');
             $table->timestamps();
 
             $table->foreign('category_id')->references('id')->on('categories');
