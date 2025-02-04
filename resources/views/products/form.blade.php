@@ -41,6 +41,9 @@
                 </label>
                 <input type="text" placeholder="Name" name="name" value="{{ $product->name ?? old('name') }}"
                   class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary">
+                @error('name')
+                <p class="text-red-500">{{ $message }}</p>
+                @enderror
               </div>
 
               <div class="w-full xl:w-1/2">
@@ -161,18 +164,36 @@
 </div>
 @endsection
 
-@section('scripts')
+{{-- @section('scripts')
 <script>
   $(document).ready(function() {
     var token = document.head.querySelector('meta[name="csrf-token"]').content;
+    
+    @if (isset($product))
+    const images = {!! json_encode($product->images) !!};
+    @else
     const images = [];
+    @endif
+    
+    const imageEmpty = $(`
+      <div class="w-full h-40 flex items-center justify-between col-span-2">
+        <p class="text-center w-full">Image not found</p>
+      </div>
+    `)
+
+    if (images.length === 0) {
+      $('#imagePreview').append(imageEmpty)
+    }
 
     function displayImages() {
-      $('#imagePreview').empty(); // Bersihkan preview gambar yang sebelumnya
+      $('#imagePreview').empty();
 
-      // Loop untuk menampilkan gambar yang ada dalam array
+      if (images.length === 0) {
+        $('#imagePreview').append(imageEmpty)
+      }
+
       images.forEach((file, index) => {
-        const reader = new FileReader(); // Membaca file sebagai URL
+        const reader = new FileReader();
 
         reader.onload = function(e) {
           const diplayImage = $(
@@ -234,6 +255,14 @@
       event.preventDefault()
       const formData = new FormData(this)
 
+      if (images.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please insert at least 1 image"
+        })
+      }
+
       images.forEach((file, index) => {
         formData.append("images[]",file)
       })
@@ -244,8 +273,186 @@
         data: formData,
         processData: false,
         contentType: false,
+        success: function(response) {
+          $('.error-message').remove();
+          
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: response.message
+          })
+        },
+        error: function(xhr) {
+          const errors = xhr.responseJSON.errors;
+
+          $('.error-message').remove();
+                      
+          $.each(errors, function(key, value) {
+              var inputField = $('[name="'+ key +'"]');
+              inputField.after('<p class="error-message text-red-500">' + value[0] + '</p>');
+          });
+        }
       })
     })
+  });
+</script>
+@endsection --}}
+
+@section('scripts')
+<script>
+  $(document).ready(function() {
+    var token = document.head.querySelector('meta[name="csrf-token"]').content;
+    
+    @if (isset($product))
+      var images = {!! json_encode($product->images) !!}; // Gambar yang sudah ada
+    @else
+      var images = [];
+    @endif
+
+    var deleteImageArray = [];
+    var newImages = [];
+
+
+    const imageEmpty = $(`
+      <div class="w-full h-40 flex items-center justify-between col-span-2">
+        <p class="text-center w-full">Image not found</p>
+      </div>
+    `)
+
+    function displayImages() {
+      $('#imagePreview').empty();
+
+      if (images.length === 0 && newImages.length === 0) {
+        $('#imagePreview').append(imageEmpty);
+      }
+
+      images.forEach((imageUrl, index) => {
+        const displayImage = $(`
+          <div class="relative">
+            <img class="rounded-lg object-cover aspect-square" alt="Image Preview" src="/storage/${imageUrl}" />
+            <button data-index="${index}" data-type="old" class="delete-image-button bg-red-500 hover:bg-red-500/90 py-2 px-3.5 text-white rounded-full absolute -top-2 -right-2">
+              <i class="fa-solid fa-x"></i>
+            </button>
+          </div>
+        `);
+        $('#imagePreview').append(displayImage);
+      });
+
+      newImages.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const displayImage = $(`
+            <div class="relative">
+              <img class="rounded-lg object-cover aspect-square" alt="Image Preview" src="${e.target.result}" />
+              <button data-index="${index}" data-type="new" class="delete-image-button bg-red-500 hover:bg-red-500/90 py-2 px-3.5 text-white rounded-full absolute -top-2 -right-2">
+                <i class="fa-solid fa-x"></i>
+              </button>
+            </div>
+          `);
+          $('#imagePreview').append(displayImage);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function deleteImages(index, type) {
+      if (type === "old") {
+        deleteImageArray.push(images[index])
+        images.splice(index, 1);
+      } else {
+        newImages.splice(index, 1);
+      }
+      displayImages();
+    }
+
+    $('#addImageBtn').click(function() {
+      $('#imageUpload').click();
+    });
+
+    $('#imageUpload').change(function(event) {
+      const file = event.target.files[0]; 
+      if (file) {
+        newImages.push(file);
+        displayImages();
+      }
+    });
+
+    $(document).on('click', '.delete-image-button', async function(event) {
+      const index = $(this).attr('data-index');
+      const type = $(this).attr('data-type');
+
+      const result = await Swal.fire({
+        title: "Do you want to delete this image?",
+        icon: "question",
+        showDenyButton: true,
+        confirmButtonText: "Yes",
+        denyButtonText: `No`
+      });
+
+      if (result.isConfirmed) {
+        deleteImages(index, type);
+        Swal.fire("Success", "", "success");
+      }
+    });
+
+    $('form').submit(function(event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+
+      const isEdit = {{ isset($product) ? 'true' : 'false' }};
+      if (isEdit) {
+        formData.append('_method', 'PUT')
+      }
+      
+
+      if (images.length === 0 && newImages.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Please insert at least 1 image"
+        });
+        return;
+      }
+
+      newImages.forEach((file, index) => {
+        formData.append("new_images[]", file);
+      });
+
+      console.log(deleteImageArray)
+      
+      if (deleteImageArray.length > 0) {
+        deleteImageArray.forEach((file, inded) => {
+          formData.append("deleted_images[]", file);
+        })
+      }
+
+
+      $.ajax({
+        url: '{{ isset($product) ? route('products.update', $product->id ?? 0) : route('products.store') }}',
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          $('.error-message').remove();
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: response.message
+          });
+        },
+        error: function(xhr) {
+          const errors = xhr.responseJSON.errors;
+          $('.error-message').remove();
+          $.each(errors, function(key, value) {
+            var inputField = $('[name="'+ key +'"]');
+            inputField.after('<p class="error-message text-red-500">' + value[0] + '</p>');
+          });
+        }
+      });
+    });
+
+    displayImages();
   });
 </script>
 @endsection
