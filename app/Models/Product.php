@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -16,6 +17,10 @@ class Product extends Model
         'images'
     ];
 
+    protected $casts = [
+        'images' => 'array'
+    ];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -26,8 +31,18 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    public function getImagesAttribute($value)
+    protected static function boot()
     {
-        return json_decode($value);
+        parent::boot();
+
+        static::deleting(function ($product) {
+            if (!empty($product->images)) {
+                foreach ($product->images as $imagePath) {
+                    if (Storage::disk('public')->exists($imagePath)) {
+                        Storage::disk('public')->delete($imagePath);
+                    }
+                }
+            }
+        });
     }
 }

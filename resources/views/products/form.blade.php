@@ -5,7 +5,7 @@
   <!-- Breadcrumb Start -->
   <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <h2 class="text-title-md2 font-bold text-black dark:text-white">
-      Create Product
+      {{ isset($product) ? "Edit Product" : "Create Product" }}
     </h2>
 
     <nav>
@@ -16,16 +16,16 @@
         <li>
           <a class="font-medium" href="{{ route('products.index') }}">Products /</a>
         </li>
-        <li class="font-medium text-primary">Create</li>
+        <li class="font-medium text-primary">
+          {{ isset($product) ? "Edit" : "Create" }}
+        </li>
       </ol>
     </nav>
   </div>
   <!-- Breadcrumb End -->
 
-  <!-- ====== Form Layout Section Start -->
   <div class="grid grid-cols-1 gap-9 sm:grid-cols-2">
     <div class="flex flex-col gap-9">
-      <!-- Contact Form Two -->
       <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div class="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
           <h3 class="font-medium text-black dark:text-white">
@@ -139,179 +139,76 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-9">
-      <!-- Contact Form Two -->
-      <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div class="border-b border-stroke px-6.5 py-4 flex items-center justify-between dark:border-strokedark">
-          <h3 class="font-medium text-black dark:text-white">
-            Images
-          </h3>
-          <button id="addImageBtn" class="bg-primary text-white rounded-lg px-4 py-2">Add Image</button>
+    <div class="flex flex-col gap-5">
+      <div>
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6.5 py-4 flex items-center justify-between dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">
+              Images
+            </h3>
+            <button id="addImageBtn" class="bg-primary text-white rounded-lg px-4 py-2">Add Image</button>
+          </div>
+
+          <div>
+            <input type="file" accept="image/*" id="imageUpload" class="hidden">
+          </div>
+
+          <div id="imagePreview" class="grid grid-cols-2 gap-5.5 p-6.5">
+
+          </div>
         </div>
+      </div>
 
-        <div>
-          <input type="file" accept="image/*" id="imageUpload" class="hidden">
-        </div>
+      <div>
+        <div class="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div class="border-b border-stroke px-6.5 py-4 flex items-center dark:border-strokedark">
+            <h3 class="font-medium text-black dark:text-white">
+              Color
+            </h3>
+          </div>
 
-        <div id="imagePreview" class="grid grid-cols-2 gap-5.5 p-6.5">
+          <div id="colorsContainer" class="space-y-5 p-6.5">
 
+          </div>
+
+          <div class="p-6.5">
+            <button id="btn-add-color"
+              class="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90">
+              Add color
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <!-- ====== Form Layout Section End -->
-
 </div>
 @endsection
-
-{{-- @section('scripts')
-<script>
-  $(document).ready(function() {
-    var token = document.head.querySelector('meta[name="csrf-token"]').content;
-    
-    @if (isset($product))
-    const images = {!! json_encode($product->images) !!};
-    @else
-    const images = [];
-    @endif
-    
-    const imageEmpty = $(`
-      <div class="w-full h-40 flex items-center justify-between col-span-2">
-        <p class="text-center w-full">Image not found</p>
-      </div>
-    `)
-
-    if (images.length === 0) {
-      $('#imagePreview').append(imageEmpty)
-    }
-
-    function displayImages() {
-      $('#imagePreview').empty();
-
-      if (images.length === 0) {
-        $('#imagePreview').append(imageEmpty)
-      }
-
-      images.forEach((file, index) => {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-          const diplayImage = $(
-            `<div class="relative">
-              <img class="rounded-lg object-cover aspect-square" alt="Image Preview" src=${e.target.result} />
-              <button data-index=${index} class="delete-image-button bg-red-500 hover:bg-red-500/90 py-2 px-3.5 text-white rounded-full absolute -top-2 -right-2">
-                <i class="fa-solid fa-x"></i>
-              </button>
-            </div>`)
-
-          $('#imagePreview').append(diplayImage);
-        };
-
-        reader.readAsDataURL(file); 
-      });
-    }
-
-    function deleteImages(index) {
-      images.splice(index,1)
-      displayImages()
-    }
-
-    $('#addImageBtn').click(function() {
-      $('#imageUpload').click();
-    });
-
-  
-    $('#imageUpload').change(function(event) {
-      const file = event.target.files[0]; 
-      if (file) {
-        images.push(file);
-        displayImages();
-      }
-    });
-
-    $('.delete-image-button').click(function(event) {
-     const index =  $(this).attr("data-index")
-     deleteImages(index)
-    })
-
-    $(document).on('click', '.delete-image-button', async function(event) {
-      const result = await Swal.fire({
-        title: "Do you want to delete this image?",
-        icon: "question",
-        showDenyButton: true,
-        confirmButtonText: "Yes",
-        denyButtonText: `No`
-      })
-
-      if (result.isConfirmed) {
-        const index = $(this).attr('data-index')
-        deleteImages(index)
-        Swal.fire("Success", "", "success")
-      }
-      
-    })
-
-    $('form').submit(function(event) {
-      event.preventDefault()
-      const formData = new FormData(this)
-
-      if (images.length === 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Warning",
-          text: "Please insert at least 1 image"
-        })
-      }
-
-      images.forEach((file, index) => {
-        formData.append("images[]",file)
-      })
-
-      $.ajax({
-        url: '{{ route('products.store') }}',
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-          $('.error-message').remove();
-          
-          Swal.fire({
-            icon: "success",
-            title: "Success",
-            text: response.message
-          })
-        },
-        error: function(xhr) {
-          const errors = xhr.responseJSON.errors;
-
-          $('.error-message').remove();
-                      
-          $.each(errors, function(key, value) {
-              var inputField = $('[name="'+ key +'"]');
-              inputField.after('<p class="error-message text-red-500">' + value[0] + '</p>');
-          });
-        }
-      })
-    })
-  });
-</script>
-@endsection --}}
 
 @section('scripts')
 <script>
   $(document).ready(function() {
-    var token = document.head.querySelector('meta[name="csrf-token"]').content;
+    const token = document.head.querySelector('meta[name="csrf-token"]').content;
+    const variants = [];
     
     @if (isset($product))
-      var images = {!! json_encode($product->images) !!}; // Gambar yang sudah ada
+      const images = {!! json_encode($product->images) !!}; // Gambar yang sudah ada
     @else
-      var images = [];
+      const images = [];
     @endif
 
-    var deleteImageArray = [];
-    var newImages = [];
 
+    @if (isset($product))
+      variants.push(...{!! json_encode($product->variants) !!});
+    @else
+    variants.push({
+        color: "#000000",
+        variant_name: "Black",
+        stock: 0,
+      });
+    @endif
+
+    const deleteImageArray = [];
+    const newImages = [];
 
     const imageEmpty = $(`
       <div class="w-full h-40 flex items-center justify-between col-span-2">
@@ -395,6 +292,87 @@
       }
     });
 
+    function renderInputColor() {
+      $('#colorsContainer').empty();
+
+      variants.forEach((variant, index) => {
+        const newInputColor = $(`
+          <div class="w-full grid grid-cols-3 gap-5">
+            <div>
+              <label class="mb-3 block text-sm font-medium text-black dark:text-white">Name</label>
+              <input type="text" placeholder="Name" class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary input-color" data-type="variant_name" value="${variant.variant_name}" data-index=${index}>
+            </div>
+
+            <div>
+              <label class="mb-3 block text-sm font-medium text-black dark:text-white">Stock</label>
+              <input type="number" placeholder="0" class="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary input-color" data-type="stock" value="${variant.stock}" data-index=${index}>
+            </div>
+          
+            <div>
+              <label class="mb-3 block text-sm font-medium text-black dark:text-white">Color</label>
+              <div class="flex gap-2">
+                <input class="input-color h-12.5 w-full rounded border-[1.5px] border-stroke bg-transparent px-2 py-1 font-normal text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary" data-type="color" data-index="${index}" type="color" value="${variant.color}" />
+                <button data-index="${index}" class="btn-delete-color bg-red-500 text-white px-3 rounded-lg py-1 text-sm hover:bg-red-500/90 transition-colors">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `);
+
+        $('#colorsContainer').append(newInputColor);
+      });
+    }
+
+    $(document).on('input', '.input-color', function(event) {
+      const index = $(this).attr('data-index');
+      const type = $(this).attr("data-type")
+      const newValue = $(this).val();
+      
+      variants[index] = {
+        ...variants[index],
+        [type]: newValue
+      };
+    })  
+
+    $(document).on('click', ".btn-delete-color", async function(event) {
+      const index = $(this).attr('data-index');
+      if (variants.length === 1) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "You can't delete this variant, product at least have 1 variant"
+        })
+
+        return
+      }
+      
+      const result = await Swal.fire({
+        title: "Do you want to delete this variant?",
+        icon: "question",
+        showDenyButton: true,
+        confirmButtonText: "Yes",
+        denyButtonText: `No`
+      });
+
+      if (result.isConfirmed) {
+        variants.splice(index, 1)
+        Swal.fire("Success", "", "success");
+        renderInputColor()
+      }
+    })
+
+    $('#btn-add-color').click(function(event) {
+      variants.push({
+        stock: 0,
+        variant_name: "Black",
+        color: "#000000"
+      })
+
+      renderInputColor()
+    })
+
     $('form').submit(function(event) {
       event.preventDefault();
       const formData = new FormData(this);
@@ -413,12 +391,23 @@
         });
         return;
       }
+      
+      if (variants.length === 0 || variants.some(({variant_name, stock}) => !variant_name || !stock )) {
+        Swal.fire({
+          icon: "warning",
+          title: "Warning",
+          text: "Make sure variant have valid name and stock!"
+        })
+        return
+      }
+
+      
+      formData.append("variants", JSON.stringify(variants));
+      
 
       newImages.forEach((file, index) => {
         formData.append("new_images[]", file);
       });
-
-      console.log(deleteImageArray)
       
       if (deleteImageArray.length > 0) {
         deleteImageArray.forEach((file, inded) => {
@@ -439,7 +428,10 @@
             icon: "success",
             title: "Success",
             text: response.message
+          }).then((res) => {
+            window.location.href = '{{ route('products.index') }}';
           });
+
         },
         error: function(xhr) {
           const errors = xhr.responseJSON.errors;
@@ -453,6 +445,7 @@
     });
 
     displayImages();
+    renderInputColor()
   });
 </script>
 @endsection

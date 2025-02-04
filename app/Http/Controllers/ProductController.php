@@ -40,7 +40,6 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-
         ]);
 
         try {
@@ -60,8 +59,20 @@ class ProductController extends Controller
                 }
             }
 
-            $product->images = json_encode($imagePaths); // Menyimpan path gambar dalam format JSON
+            $product->images = $imagePaths;
             $product->save();
+
+            $variants = json_decode($request->variants, true);
+
+            if (is_array($variants)) {
+                foreach ($variants as $variant) {
+                    $product->variants()->create([
+                        'color' => $variant['color'],
+                        'stock' => $variant['stock'],
+                        'variant_name' => $variant['variant_name']
+                    ]);
+                }
+            }
 
             return response()->json([
                 'success' => true,
@@ -89,7 +100,7 @@ class ProductController extends Controller
      */
     public function edit(string $id)
     {
-        $product = Product::find($id);
+        $product = Product::with('variants')->find($id);
         $categories = Category::all();
         if (!$product) {
             return redirect()->route('products.index');
@@ -144,6 +155,36 @@ class ProductController extends Controller
                 'images' => array_merge(array_diff($product->images ?? [], $request->deleted_images ?? []), $uploadedImages),
             ]);
 
+            $variants = json_decode($request->variants, true);
+            if (is_array($variants)) {
+                $existingVariantIds = $product->variants()->pluck('id')->toArray();
+
+                $newVariantIds = [];
+                foreach ($variants as $variant) {
+                    if (isset($variant['id'])) {
+                        $product->variants()->where('id', $variant['id'])->update([
+                            'variant_name' => $variant['variant_name'],
+                            'color' => $variant['color'],
+                            'stock' => $variant['stock']
+                        ]);
+
+                        $newVariantIds[] = $variant['id'];
+                    } else {
+                        $newVariant = $product->variants()->create([
+                            'variant_name' => $variant['variant_name'],
+                            'color' => $variant['color'],
+                            'stock' => $variant['stock']
+                        ]);
+
+                        $newVariantIds[] = $newVariant->id;
+                    }
+                }
+
+
+                $variantsToDelete = array_diff($existingVariantIds, $newVariantIds);
+                $product->variants()->whereIn('id', $variantsToDelete)->delete();
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Product updated successfully',
@@ -161,6 +202,9 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return redirect()->route('products.index')->with(['success' => 'Product deleted success']);
     }
 }

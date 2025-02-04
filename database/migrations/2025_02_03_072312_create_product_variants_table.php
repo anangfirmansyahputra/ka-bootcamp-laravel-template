@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');
             $table->string('variant_name');
+            $table->integer('stock')->default(0);
             $table->string('color')->nullable();
             $table->timestamps();
 

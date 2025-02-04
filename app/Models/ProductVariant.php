@@ -9,7 +9,8 @@ class ProductVariant extends Model
     protected $fillable = [
         'variant_name',
         'color',
-        'product_id'
+        'product_id',
+        'stock'
     ];
 
     public function product()
