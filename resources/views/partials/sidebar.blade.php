@@ -6,8 +6,8 @@
     class="sidebar-header flex items-center gap-2 pb-7 pt-8">
     <a href="index.html">
       <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-        <img class="dark:hidden" src="./images/logo/logo.svg" alt="Logo" />
-        <img class="hidden dark:block" src="./images/logo/logo-dark.svg" alt="Logo" />
+        <img class="dark:hidden" src="{{ asset('images/logo/logo.svg') }}" alt="Logo" />
+        <img class="hidden dark:block" src="{{ asset('images/logo/logo-dark.svg')}}" alt="Logo" />
       </span>
 
       <img class="logo-icon" :class="sidebarToggle ? 'lg:block' : 'hidden'" src="./images/logo/logo-icon.svg"
@@ -37,9 +37,8 @@
         <ul class="mb-6 flex flex-col gap-4">
           <!-- Menu Item Calendar -->
           <li>
-            <a href="calendar.html" @click="selected = (selected === 'Calendar' ? '':'Calendar')"
-              class="menu-item group"
-              :class=" (selected === 'Calendar') && (page === 'calendar') ? 'menu-item-active' : 'menu-item-inactive'">
+            <a href="{{ route('categories.index') }}"
+              class="menu-item group {{ request()->routeIs('categories.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="lucide lucide-chart-bar-stacked">
@@ -52,6 +51,29 @@
 
               <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">
                 Category
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Calendar -->
+
+          <!-- Menu Item Calendar -->
+          <li>
+            <a href="{{ route('products.index') }}"
+              class="menu-item group {{ request()->routeIs('products.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="lucide lucide-shopping-basket">
+                <path d="m15 11-1 9" />
+                <path d="m19 11-4-7" />
+                <path d="M2 11h20" />
+                <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4" />
+                <path d="M4.5 15.5h15" />
+                <path d="m5 11 4-7" />
+                <path d="m9 11 1 9" />
+              </svg>
+
+              <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">
+                Product
               </span>
             </a>
           </li>
