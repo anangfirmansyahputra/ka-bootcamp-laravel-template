@@ -24,7 +24,7 @@
       <div class="w-full p-4 sm:p-12.5 xl:p-17.5">
         <span class="mb-1.5 block font-medium">Start for free</span>
         <h2 class="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
-          Sign In to TailAdmin
+          {{__("login.title")}}
         </h2>
 
         <form action="{{ route('login') }}" method="POST">
@@ -108,8 +108,13 @@
                 </defs>
               </svg>
             </span>
-            Sign in with Google
+            {{__("login.button")}}
           </button>
+
+          <div>
+            <a href="{{ route('change.lang', ['lang' => 'id']) }}">🇮🇩 Bahasa Indonesia</a>
+            <a href="{{ route('change.lang', ['lang' => 'en']) }}">🇺🇸 English</a>
+          </div>
 
           <div class="mt-6 text-center">
             <p class="font-medium">

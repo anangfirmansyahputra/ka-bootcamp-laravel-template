@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\API\OrderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix("admin")->middleware('auth')->group(function () {
@@ -11,7 +15,8 @@ Route::prefix("admin")->middleware('auth')->group(function () {
     Route::resource('products', ProductController::class);
 });
 
-
 Route::get('login',  [\App\Http\Controllers\AuthController::class, 'index'])->name('login')->middleware("guest");
 Route::post('login',  [\App\Http\Controllers\AuthController::class, 'login'])->name('login')->middleware('guest');
 Route::post("logout",  [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::get('lang', [LanguageController::class, 'change'])->name("change.lang");

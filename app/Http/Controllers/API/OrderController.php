@@ -37,9 +37,9 @@ class OrderController extends Controller
             'city' => 'required|string',
             'postal_code' => 'required|string',
             'country' => 'required|string',
-            'products' => 'required|array',
-            'products.*.product_variant_id' => 'required|exists:product_variants,id',
-            'products.*.quantity' => 'required|integer|min:1',
+            // 'products' => 'required|array',
+            // 'products.*.product_variant_id' => 'required|exists:product_variants,id',
+            // 'products.*.quantity' => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
@@ -199,6 +199,9 @@ class OrderController extends Controller
             }
 
             $payload = $request->all();
+
+            Log::info($payload);
+
             $order = Order::findOrFail($payload['external_id']);
 
             if (!$order) {
